@@ -1,31 +1,52 @@
+from keras.models import load_model
 from tkinter import *
+import win32gui
+from PIL import ImageGrab, Image
+import numpy as np
+model = load_model('mnist.h5')
 
 
 # -----Predict Digit-----
 def predict_digit(image):
-    print("DELETE ME. I'm only here to avoid an indent error.")
-    # convert to grayscale and resize the image.
+    
+    # Resize the image and convert to grayscale.
+    image = image.resize((28, 28))
+    image = image.convert('L')
+    image = np.array(image)
+    
     # Reshape the image for model input.
+    image = image.reshape(1, 28, 28, 1)
+    image = image / 255.0
+    
     # Predicts the class.
+    res = model.predict([image])[0]
+    print(np.argmax(res),max(res))
+    return np.argmax(res), max(res)
+
 
 # ------Writing To Text-----
 def writing_to_text():
+    
     # Variables
     accuracy = 0.00
-    digit = 2 #----------DELETE. Only here to make sure the program runs.
 
     # Get the id and coordinates of the canvas.
-
+    canvas_draw_coords = canvas_draw.winfo_id()
+    
     # Initialize image from the coordinates of the canvas.
-
+    canvas_draw_rect = win32gui.GetWindowRect(canvas_draw_coords)
+    image = ImageGrab.grab(canvas_draw_rect)
+    
     # Assign values to digit and accuracy
-
+    digit, accuracy = predict_digit(image)
+    
     # If digit and accuracy were assigned values, show
     # the results. Otherwise, an alert will popup.
     if (str(digit).isalnum()) and (accuracy > 0.00):
         show_results(digit, accuracy)
     else:
         invalid_prediction_popup()
+
 
 # ------Show Digit-------
 def show_results(digit,accuracy):
@@ -36,6 +57,7 @@ def show_results(digit,accuracy):
     # Verifies accuracy entry is empty & updates.
     if len(accuracy_entry.get())<1:
         accuracy_entry.insert(0,(str(accuracy)+'%'))
+
 
 # -------Alert Popup------
 def invalid_prediction_popup():
@@ -54,6 +76,7 @@ def invalid_prediction_popup():
     okay_button = Button(popup_window,text = "Okay",command = popup_window.destroy)
     okay_button.pack()
 
+
 # ------Clear------
 def clear():
 
@@ -61,6 +84,7 @@ def clear():
     canvas_draw.delete("all")
     predicted_number_label.config(text="")
     accuracy_entry.delete(0,'end')
+
 
 # ------Write Digit------
 def write_digit(event):
@@ -73,6 +97,7 @@ def write_digit(event):
     # Allows the user to "write".
     canvas_draw.create_oval((x - ballpoint_size), (y - ballpoint_size), (x + ballpoint_size),
                             (y + ballpoint_size), fill='black')
+
 
 # -----UI Setup-------
 window = Tk()
